@@ -58,12 +58,14 @@ contract DomainContractRegistry is ChainlinkClient{
    * If a domain is already registered, only the admin can update the registry. 
    * @param _domain The domain name
    * @param _dappRegistry The address of the dapp registry
+   * @return requestId The request id of the Chainlink request
   */
-  function setDappRegistry(string memory _domain, address _dappRegistry) external {
+  function setDappRegistry(string memory _domain, address _dappRegistry) 
+  external returns(bytes32){
     if(registryMap[_domain].dappRegistry != address(0) && registryMap[_domain].admin == msg.sender) {
-      _checkForDomain(_domain, _dappRegistry, this.fulfill.selector);
+      return _checkForDomain(_domain, _dappRegistry, this.fulfill.selector);
     }else {
-      recordTransition(_domain, _dappRegistry);
+      return recordTransition(_domain, _dappRegistry);
     }
   }
 
@@ -74,9 +76,9 @@ contract DomainContractRegistry is ChainlinkClient{
    * @param _domain The domain name
    * @param _dappRegistry The address of the dapp registry
    * @param selector The selector of the callback function to be called
-   * @return requestId The request id of the Chainlink request
    */
-  function _checkForDomain(string memory _domain, address _dappRegistry, bytes4 selector) internal returns(bytes32) {
+  function _checkForDomain(string memory _domain, address _dappRegistry, bytes4 selector) 
+  internal returns(bytes32) {
     Chainlink.Request memory req = buildChainlinkRequest(
       jobId,
       address(this),
@@ -102,7 +104,8 @@ contract DomainContractRegistry is ChainlinkClient{
    * @param _requestId The request id of the Chainlink request
    * @param result The result of the Chainlink request
    */
-  function fulfill(bytes32 _requestId, bool result) public recordChainlinkFulfillment(_requestId) {
+  function fulfill(bytes32 _requestId, bool result) 
+  public recordChainlinkFulfillment(_requestId) {
     if(result) {
       string memory domain = requestToDomainMap[_requestId].domain;
       registryMap[domain].dappRegistry = requestToDomainMap[_requestId].dappRegistry;
@@ -119,7 +122,8 @@ contract DomainContractRegistry is ChainlinkClient{
    * @param _requestId The request id of the Chainlink request
    * @param result The result of the Chainlink request
    */
-  function fulfillRecordTransiton(bytes32 _requestId, bool result) public recordChainlinkFulfillment(_requestId) {
+  function fulfillRecordTransiton(bytes32 _requestId, bool result) 
+  public recordChainlinkFulfillment(_requestId) {
     if(result) {
       string memory domain = requestToDomainMap[_requestId].domain;
       recordTransitionMap[domain].dappRegistry = requestToDomainMap[_requestId].dappRegistry;
@@ -140,16 +144,28 @@ contract DomainContractRegistry is ChainlinkClient{
    * @param _domain The domain name
    * @param _dappRegistry The address of the dapp registry
    */
-  function recordTransition(string memory _domain, address _dappRegistry) internal {
+  function recordTransition(string memory _domain, address _dappRegistry) internal returns(bytes32) {
     if(recordTransitionMap[_domain].dappRegistry == _dappRegistry) {
       if(block.timestamp > recordTransitionMap[_domain].timestamp + 7 days) {
-        _checkForDomain(_domain, _dappRegistry, this.fulfill.selector);
+        return _checkForDomain(_domain, _dappRegistry, this.fulfill.selector);
       }
       else {
         revert DRC_CoolOffPeriodNotOver();
       }
     }  
     else
-      _checkForDomain(_domain, _dappRegistry, this.fulfillRecordTransiton.selector);
+      return _checkForDomain(_domain, _dappRegistry, this.fulfillRecordTransiton.selector);
+  }
+
+  function getDappRegistry(string memory _domain) public view returns(address) {
+    return registryMap[_domain].dappRegistry;
+  }
+
+  function getAdmin(string memory _domain) public view returns(address) {
+    return registryMap[_domain].admin;
+  }
+
+  function getRecordTransition(string memory _domain) public view returns(address, uint256) {
+    return (recordTransitionMap[_domain].dappRegistry, recordTransitionMap[_domain].timestamp);
   }
 }

@@ -11,8 +11,14 @@ module.exports = async ({ getNamedAccounts, deployments}) => {
             DomainContractRegistry = await hre.deployments.get("DomainContractRegistry")
         })
 
-        describe("First time registartion", function () {
+        describe("Registration of domain", function () {
             
+            it("Should record transtion when a user register domain", async function () {
+                const domainName = "eth-to-weth.vercel.app"
+                const DRCAddress = DRC.address
+                const response = await DomainContractRegistry.setDappRegistry(domainName, DRCAddress)
+
+            })
         })
 
     })
