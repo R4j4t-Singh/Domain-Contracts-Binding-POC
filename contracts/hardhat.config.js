@@ -6,6 +6,9 @@ require("dotenv").config()
 module.exports = {
   solidity: "0.8.17",
   defaultNetwork: "hardhat",
+  mocha: {
+    timeout: "200000"
+  },
   networks: {
     "hardhat" : {
       chainId: 31337,
@@ -14,13 +17,16 @@ module.exports = {
       url: process.env.SEPOLIA_RPC_URL,
       blockchainConfirmations: 6,
       chainId: 11155111,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY, process.env.SECOND_PRIVATE_KEY],
       saveDeployments: true,
     },
   },
   namedAccounts: {
     deployer: {
       default: 0,
+    },
+    newAdmin : {
+      default: 1
+    }
   }
-}
 };

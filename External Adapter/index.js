@@ -43,7 +43,7 @@ const createRequest = (input, callback) => {
   // The Validator helps you validate the Chainlink request data
   const validator = new Validator(callback, input, customParams);
   const jobRunID = validator.validated.id;
-  const endpoint = validator.validated.data.endpoint || "contracts.json";
+  const endpoint = "contracts.json";
   const domain = validator.validated.data.domain;
   const drcAddress = validator.validated.data.drcAddress;
   const url = `https://${domain}/${endpoint}`;

@@ -54,15 +54,18 @@ contract DomainContractRegistry is ChainlinkClient{
 
   /**
    * @dev Set the dapp registry for a domain.
-   * @notice If a domain is not registered or the owner is changed, record the transition. 
-   * If a domain is already registered, only the admin can update the registry. 
+   * @notice If a domain is not registered add the dapp Registry. 
+   * If a domain is already registered, and admin wants to update the dapp registry, 
+   * update the registry. 
+   * If a domain is already registered, and new owner wants to update the dapp registry, 
+   * record transition.
    * @param _domain The domain name
    * @param _dappRegistry The address of the dapp registry
    * @return requestId The request id of the Chainlink request
   */
   function setDappRegistry(string memory _domain, address _dappRegistry) 
   external returns(bytes32){
-    if(registryMap[_domain].dappRegistry != address(0) && registryMap[_domain].admin == msg.sender) {
+    if(registryMap[_domain].dappRegistry == address(0) || registryMap[_domain].admin == msg.sender) {
       return _checkForDomain(_domain, _dappRegistry, this.fulfill.selector);
     }else {
       return recordTransition(_domain, _dappRegistry);
